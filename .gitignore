@@ -1,4 +1,6 @@
 .idea
+backup
+
 venv
 __pycache__
 scrap.py

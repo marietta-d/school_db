@@ -2,10 +2,15 @@ import school_db as db
 import mysql.connector
 import matplotlib.pyplot as plt
 import numpy as np
+import json
+
+with open('private/db_password.json') as json_file:
+    private_data = json.load(json_file)
+
 my_db = mysql.connector.connect(
     host="localhost",
-    user="marietta",
-    password="pythonis@BIGsnAK3",
+    user=private_data["db_username"],
+    password=private_data["db_password"],
     database="school"
     )
 my_cursor = my_db.cursor()
