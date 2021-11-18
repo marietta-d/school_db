@@ -1,5 +1,7 @@
 from enum import Enum
 import mysql.connector
+from datetime import timedelta
+
 my_db = mysql.connector.connect(
     host="localhost",
     user="marietta",
@@ -25,6 +27,11 @@ def record_new_student(first_name, last_name, birth_date, level="A"):
     :param birth_date:
     :param level:
     :return: student's ID
+
+    Example:
+
+    >>> import school_db as db
+    >>> db.record_new_student("maria", "metakitrina", "1900-10-05", "A")
     """
 
     sql = "insert into student (first_name, last_name, date_of_birth, level) values (%s, %s, %s, %s)"
@@ -83,4 +90,51 @@ def new_teaching_capability(teacher_id, subject_id):
     my_cursor.execute(sql, val)
     my_db.commit()
 
-# def find_teacher_for_subject_name():
+
+def get_all_teachers():
+    sql = "select * from teacher"
+    my_cursor.execute(sql)
+    all_teachers_list = []
+    for teacher in my_cursor.fetchall():
+        teacher_dictionary = {"id": teacher[0],
+                              "first_name": teacher[1],
+                              "last_name": teacher[2]
+                              }
+        all_teachers_list.append(teacher_dictionary)
+    return all_teachers_list
+
+
+def get_timetable_entries_for_teacher(teacher_id):
+    sql = "select * from timetable_entry where teacher_id = %s"
+    val = (teacher_id, )
+    my_cursor.execute(sql, val)
+    timetable_list = []
+    for timetable_entry in my_cursor.fetchall():
+        timetable_dictionary = {"day": timetable_entry[0],
+                                "start": timetable_entry[1],
+                                "end": timetable_entry[2],
+                                "room": timetable_entry[3],
+                                "subject": timetable_entry[4],
+                                "teacher_id": timetable_entry[5]}
+        timetable_list.append(timetable_dictionary)
+    return timetable_list
+
+
+def get_hours_for_teacher(teacher_id):
+    timetable_list = get_timetable_entries_for_teacher(teacher_id)
+    total_duration = timedelta(seconds=0)
+    for timetable_entry in timetable_list:
+        duration = timetable_entry["end"] - timetable_entry["start"]
+        total_duration += duration
+    return total_duration
+
+
+def get_all_teachers_hours():
+    all_teachers_hours_list = []
+    for teacher in get_all_teachers():
+        teacher_id = teacher["id"]
+        duration = get_hours_for_teacher(teacher_id)
+        teacher_dict = {"name": teacher["first_name"] + " " + teacher["last_name"],
+                        "duration_minutes": duration.total_seconds()/60}
+        all_teachers_hours_list.append(teacher_dict)
+    return all_teachers_hours_list
