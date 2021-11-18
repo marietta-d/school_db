@@ -1,3 +1,4 @@
+from enum import Enum
 import mysql.connector
 my_db = mysql.connector.connect(
     host="localhost",
@@ -7,6 +8,14 @@ my_db = mysql.connector.connect(
     )
 
 my_cursor = my_db.cursor()
+
+
+class Day(Enum):
+    Monday = "Monday"
+    Tuesday = "Tuesday"
+    Wednesday = "Wednesday"
+    Thursday = "Thursday"
+    Friday = "Friday"
 
 
 def record_new_student(first_name, last_name, birth_date, level="A"):
@@ -39,6 +48,39 @@ def record_new_teacher(first_name, last_name):
     return my_cursor.lastrowid
 
 
+def record_new_subject(subject_name, subject_level, subject_id):
+    sql = "insert into subject (name, level, id) values (%s, %s, %s)"
+    val = (subject_name, subject_level, subject_id)
+    try:
+        my_cursor.execute(sql, val)  # may raise Exception if pr. key exists
+        my_db.commit()
+        return my_cursor.lastrowid
+    except mysql.connector.errors.IntegrityError:
+        return None
 
 
+def record_new_timetable_entry(day, start_time, end_time, room, subject_id, teacher_id):
+    assert(type(day) == Day)
+    sql = "insert into timetable_entry (day, start, end, room, subject_id, teacher_id) values (%s, %s, %s, %s, %s, %s)"
+    val = (day.value, start_time, end_time, room, subject_id, teacher_id)
+    my_cursor.execute(sql, val)
+    my_db.commit()
 
+
+def new_registration(student_id, subject_id):
+    sql = "insert into registrations (student_id, subject_id) values (%s, %s)"
+    val = (student_id, subject_id)
+    my_cursor.execute(sql, val)
+    my_db.commit()
+
+
+def new_teaching_capability(teacher_id, subject_id):
+    """
+    Teaching capability means that Teacher X can teach Subject Y.
+    """
+    sql = "insert into teacher_subject (teacher_id, subject_id) values (%s, %s)"
+    val = (teacher_id, subject_id)
+    my_cursor.execute(sql, val)
+    my_db.commit()
+
+# def find_teacher_for_subject_name():
