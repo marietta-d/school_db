@@ -1,6 +1,6 @@
 .idea
 backup
-
+private
 venv
 __pycache__
 scrap.py
